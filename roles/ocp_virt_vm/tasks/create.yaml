@@ -1,7 +1,7 @@
 # The ComputeInstance Create Playbook in osac-aap pass in the following variables:
 # compute_instance: Payload from EDA
 # compute_instance_name: Name for the order.
-# vm_working_namespace: Private namespace created for the ComputeInstance
+# compute_instance_working_namespace: Private namespace created for the ComputeInstance
 # template_id: Template Id string.
 # template_parameters: All template variables passed.  Defined in arguement_specs.yaml
 # default_arg_specs: default values for arguement_specs
@@ -73,7 +73,7 @@
       kind: Secret
       metadata:
         name: "{{ compute_instance_name }}-cloud-init"
-        namespace: "{{ vm_working_namespace }}"
+        namespace: "{{ compute_instance_working_namespace }}"
         labels: "{{ default_vm_labels }}"
       type: Opaque
       data:
@@ -91,7 +91,7 @@
           kind: Secret
           metadata:
             name: "{{ compute_instance_name }}-ssh-public-key"
-            namespace: "{{ vm_working_namespace }}"
+            namespace: "{{ compute_instance_working_namespace }}"
             labels: "{{ default_vm_labels }}"
           data:
             ssh-public-key: "{{ params.ssh_public_key | b64encode }}"
@@ -141,7 +141,7 @@
       metadata:
         name: "{{ compute_instance_name }}-root-disk"
         labels: "{{ default_vm_labels }}"
-        namespace: "{{ vm_working_namespace }}"
+        namespace: "{{ compute_instance_working_namespace }}"
       spec:
         source:
           registry:
@@ -163,7 +163,7 @@
       kind: VirtualMachine
       metadata:
         name: "{{ compute_instance_name }}"
-        namespace: "{{ vm_working_namespace }}"
+        namespace: "{{ compute_instance_working_namespace }}"
         labels: "{{ default_vm_labels }}"
       spec:
         running: true
@@ -175,14 +175,14 @@
 
 - name: Show VM Namespace and VM Name
   ansible.builtin.debug:
-    msg: "Namespace {{ vm_working_namespace }} - Name: {{ compute_instance_name }}"
+    msg: "Namespace {{ compute_instance_working_namespace }} - Name: {{ compute_instance_name }}"
 
 - name: Wait for VM to be ready
   kubernetes.core.k8s_info:
     api_version: kubevirt.io/v1
     kind: VirtualMachine
     name: "{{ compute_instance_name }}"
-    namespace: "{{ vm_working_namespace }}"
+    namespace: "{{ compute_instance_working_namespace }}"
     wait: true
     wait_condition:
       type: Ready
@@ -206,14 +206,14 @@
     api_version: kubevirt.io/v1
     kind: VirtualMachine
     name: "{{ compute_instance_name }}"
-    namespace: "{{ vm_working_namespace }}"
+    namespace: "{{ compute_instance_working_namespace }}"
   register: vm_status
 
 - name: Display VM information
   ansible.builtin.debug:
     msg:
       - "Virtual Machine '{{ compute_instance_name }}' created successfully"
-      - "Namespace: {{ vm_working_namespace }}"
+      - "Namespace: {{ compute_instance_working_namespace }}"
       - "Image: {{ params.image_source }}"
       - "CPU Cores: {{ params.cpu_cores }}/Memory: {{ params.memory }}"
       - "Root Disk Size: {{ params.disk_size }}"
